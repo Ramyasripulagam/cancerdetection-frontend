@@ -43,8 +43,8 @@ function Profileicon() {
         pain: false,
     });
 
-    const [isEditing, setIsEditing] = useState(false);
-    const [activeSection, setActiveSection] = useState("profile");
+    // const [isEditing, setIsEditing] = useState(false);
+    // const [activeSection, setActiveSection] = useState("profile");
 
     // Define the scrollToSection function
     const scrollToSection = (ref) => {
