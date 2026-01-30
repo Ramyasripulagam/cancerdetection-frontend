@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Loginandsignup.css";
 
@@ -9,52 +9,78 @@ function Loginandsignup() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const navigate = useNavigate();
 
+    const CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID_HERE"; // Replace with your client ID
+
     const toggleForm = () => {
         setIsSignup(!isSignup);
     };
 
+    useEffect(() => {
+        /* global google */
+        if (window.google) {
+            google.accounts.id.initialize({
+                client_id: CLIENT_ID,
+                callback: handleGoogleResponse,
+            });
+            google.accounts.id.renderButton(
+                document.getElementById("googleSignInDiv"),
+                { theme: "outline", size: "large", width: "100%" }
+            );
+        }
+    }, []);
+
+    const handleGoogleResponse = async (response) => {
+        // The JWT token from Google
+        const token = response.credential;
+
+        console.log("Google JWT Token:", token);
+
+        // Send token to your backend to verify & create/login user
+        const res = await fetch("http://localhost:5000/google-login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token }),
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+            localStorage.setItem("token", data.token);
+            localStorage.setItem("userDetails", JSON.stringify(data.user));
+            navigate("/home");
+        } else {
+            alert(data.message || "Google login failed");
+        }
+    };
+
     const handleSubmit = async (event) => {
         event.preventDefault();
-        
         if (isSignup && password !== confirmPassword) {
             alert("Passwords do not match");
             return;
         }
 
         const url = isSignup ? "http://localhost:5000/signup" : "http://localhost:5000/login";
-        console.log("Making request to:", url); // Debugging line
         const response = await fetch(url, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password }),
         });
 
         const data = await response.json();
-        console.log("Backend Response:", data); // Debugging line
         if (response.ok) {
             if (isSignup) {
                 alert("User registered successfully");
                 setIsSignup(false);
             } else {
                 localStorage.setItem("token", data.token);
-                console.log("Token stored in localStorage:", data.token); // Debugging line
-
-                // Fetch user details after login
                 const userDetailsResponse = await fetch("http://localhost:5000/user/details", {
                     method: "GET",
-                    headers: {
-                        "Authorization": `Bearer ${data.token}`,
-                    },
+                    headers: { "Authorization": `Bearer ${data.token}` },
                 });
 
                 const userDetailsData = await userDetailsResponse.json();
-                console.log("User Details Response:", userDetailsData); // Debugging line
                 if (userDetailsResponse.ok) {
                     localStorage.setItem("userDetails", JSON.stringify(userDetailsData));
-                    console.log("User details stored in localStorage:", userDetailsData); // Debugging line
-                    console.log("Navigating to /home"); // Debugging line
                     navigate("/home");
                 } else {
                     alert("Failed to fetch user details");
@@ -83,12 +109,9 @@ function Loginandsignup() {
                     <h2>{isSignup ? "Sign Up" : "Login"}</h2>
                     <form onSubmit={handleSubmit}>
                         <div className="input-group">
-                            <label htmlFor="email" className="input-label">
-                                Email:
-                            </label>
+                            <label>Email:</label>
                             <input
                                 type="email"
-                                id="email"
                                 placeholder="Enter your email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
@@ -96,28 +119,20 @@ function Loginandsignup() {
                         </div>
 
                         <div className="input-group">
-                            <label htmlFor="password" className="input-label">
-                                Password:
-                            </label>
-                            <div className="password-container">
-                                <input
-                                    type="password"
-                                    id="password"
-                                    placeholder="Enter your password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                />
-                            </div>
+                            <label>Password:</label>
+                            <input
+                                type="password"
+                                placeholder="Enter your password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
                         </div>
 
                         {isSignup && (
                             <div className="input-group">
-                                <label htmlFor="confirm-password" className="input-label">
-                                    Confirm Password:
-                                </label>
+                                <label>Confirm Password:</label>
                                 <input
                                     type="password"
-                                    id="confirm-password"
                                     placeholder="Confirm your password"
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
@@ -129,15 +144,12 @@ function Loginandsignup() {
                             {isSignup ? "Sign Up" : "Login"}
                         </button>
 
-                        <button type="button" className="google-signin-button">
-                            {isSignup ? "Sign up with Google" : "Sign in with Google"}
-                        </button>
+                        {/* Google Sign-In Button */}
+                        <div id="googleSignInDiv" style={{ width: "100%", marginTop: "10px" }}></div>
 
                         <div className="signup-link">
                             <p>
-                                {isSignup
-                                    ? "Already have an account? "
-                                    : "Don't have an account? "}
+                                {isSignup ? "Already have an account? " : "Don't have an account? "}
                                 <button type="button" onClick={toggleForm} className="toggle-button">
                                     {isSignup ? "Login" : "Sign Up"}
                                 </button>
