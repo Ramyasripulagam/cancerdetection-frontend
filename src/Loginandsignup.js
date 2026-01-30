@@ -15,13 +15,14 @@ function Loginandsignup() {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-
+        
         if (isSignup && password !== confirmPassword) {
             alert("Passwords do not match");
             return;
         }
 
         const url = isSignup ? "http://localhost:5000/signup" : "http://localhost:5000/login";
+        console.log("Making request to:", url); // Debugging line
         const response = await fetch(url, {
             method: "POST",
             headers: {
@@ -31,13 +32,33 @@ function Loginandsignup() {
         });
 
         const data = await response.json();
+        console.log("Backend Response:", data); // Debugging line
         if (response.ok) {
             if (isSignup) {
                 alert("User registered successfully");
                 setIsSignup(false);
             } else {
                 localStorage.setItem("token", data.token);
-                navigate("/home");
+                console.log("Token stored in localStorage:", data.token); // Debugging line
+
+                // Fetch user details after login
+                const userDetailsResponse = await fetch("http://localhost:5000/user/details", {
+                    method: "GET",
+                    headers: {
+                        "Authorization": `Bearer ${data.token}`,
+                    },
+                });
+
+                const userDetailsData = await userDetailsResponse.json();
+                console.log("User Details Response:", userDetailsData); // Debugging line
+                if (userDetailsResponse.ok) {
+                    localStorage.setItem("userDetails", JSON.stringify(userDetailsData));
+                    console.log("User details stored in localStorage:", userDetailsData); // Debugging line
+                    console.log("Navigating to /home"); // Debugging line
+                    navigate("/home");
+                } else {
+                    alert("Failed to fetch user details");
+                }
             }
         } else {
             alert(data.message);

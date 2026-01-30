@@ -12,17 +12,18 @@ function App(){
 
     return(
         <BrowserRouter>
-        <Routes>
-            <Route path="/" element={<Welcomepage/>}/>
-            <Route path="/loginandsignup" element={<Loginandsignup/>}/>    
-            <Route path="/checkpage" element={<Checkpage/>}/>
-            <Route path="/home" element={<Home/>}/>
-            <Route path="/preventions" element={<Prevention/>}/>
-            <Route path="/about" element={<About/>}/>
-            <Route path="/contact" element={<Contact/>}/>
-            <Route path="/profile" element={<Profileicon/>}/>
-            <Route path="/Nav" element={<Nav/>}/>
-        </Routes></BrowserRouter>
+            <Routes>
+                <Route path="/" element={<Welcomepage/>}/>
+                <Route path="/loginandsignup" element={<Loginandsignup/>}/>    
+                <Route path="/checkpage" element={<Checkpage/>}/>
+                <Route path="/home" element={<Home/>}/>
+                <Route path="/preventions" element={<Prevention/>}/>
+                <Route path="/about" element={<About/>}/>
+                <Route path="/contact" element={<Contact/>}/>
+                <Route path="/profile" element={<Profileicon/>}/>
+                <Route path="/Nav" element={<Nav/>}/>
+            </Routes>
+        </BrowserRouter>
     )
 }
 export default App;
