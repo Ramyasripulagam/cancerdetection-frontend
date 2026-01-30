@@ -15,18 +15,17 @@ import "./Profileicon.css";
 function Profileicon() {
     const navigate = useNavigate();
     const profileRef = useRef(null);
-    const riskRef = useRef(null);
     const symptomsRef = useRef(null);
     const historyRef = useRef(null);
 
     const [userDetails, setUserDetails] = useState({
-        name: null,
-        age: null,
-        email: null,
-        gender: null,
-        bloodType: null,
-        weight: null,
-        height: null,
+        name: "",
+        age: "",
+        email: "",
+        gender: "",
+        bloodType: "",
+        weight: "",
+        height: "",
     });
 
     const [riskFactors, setRiskFactors] = useState({
@@ -44,9 +43,8 @@ function Profileicon() {
     });
 
     const [isEditing, setIsEditing] = useState(false);
-    const [activeSection, setActiveSection] = useState("profile");
 
-    // Define the scrollToSection function
+    // Scroll to section
     const scrollToSection = (ref) => {
         ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     };
@@ -54,26 +52,19 @@ function Profileicon() {
     useEffect(() => {
         const storedUserDetails = JSON.parse(localStorage.getItem("userDetails"));
         if (storedUserDetails) {
-            setUserDetails((prevDetails) => ({
-                ...prevDetails,
+            setUserDetails((prev) => ({
+                ...prev,
                 email: storedUserDetails.email,
-                // Add other fields if available
             }));
         }
     }, []);
 
     const handleRiskFactorChange = (factor) => {
-        setRiskFactors((prev) => ({
-            ...prev,
-            [factor]: !prev[factor],
-        }));
+        setRiskFactors((prev) => ({ ...prev, [factor]: !prev[factor] }));
     };
 
     const handleSymptomChange = (symptom) => {
-        setSymptoms((prev) => ({
-            ...prev,
-            [symptom]: !prev[symptom],
-        }));
+        setSymptoms((prev) => ({ ...prev, [symptom]: !prev[symptom] }));
     };
 
     const getRiskLevel = () => {
@@ -148,10 +139,12 @@ function Profileicon() {
                                         value={userDetails[key] || ""}
                                         disabled={!isEditing}
                                         className="input-field"
-                                        onChange={(e) => setUserDetails((prev) => ({
-                                            ...prev,
-                                            [key]: e.target.value,
-                                        }))}
+                                        onChange={(e) =>
+                                            setUserDetails((prev) => ({
+                                                ...prev,
+                                                [key]: e.target.value,
+                                            }))
+                                        }
                                     />
                                 </div>
                             ))}

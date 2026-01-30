@@ -74,4 +74,3 @@ function Welcomepage() {
 }
 
 export default Welcomepage;
- 

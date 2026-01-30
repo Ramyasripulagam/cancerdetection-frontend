@@ -1,240 +1,165 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-    UserCircle2,
-    LogOut,
-    History,
-    PlayCircle,
-    AlertCircle,
-    HeartPulse,
-    Activity,
-    Home,
-} from "lucide-react";
-import "./Profileicon.css";
+import "./Loginandsignup.css";
 
-function Profileicon() {
+function Loginandsignup() {
+    const [isSignup, setIsSignup] = useState(false);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const navigate = useNavigate();
-    const profileRef = useRef(null);
-    const symptomsRef = useRef(null);
-    const historyRef = useRef(null);
 
-    const [userDetails, setUserDetails] = useState({
-        name: "",
-        age: "",
-        email: "",
-        gender: "",
-        bloodType: "",
-        weight: "",
-        height: "",
-    });
+    const CLIENT_ID = "845936642558-l7ft9n34dm5mkjpdg9iq9hdjq4lk473s.apps.googleusercontent.com"; // Replace with your client ID
 
-    const [riskFactors, setRiskFactors] = useState({
-        smoking: false,
-        familyHistory: false,
-        previousCancer: false,
-        radiation: false,
-    });
-
-    const [symptoms, setSymptoms] = useState({
-        unexplainedWeightLoss: false,
-        fatigue: false,
-        fever: false,
-        pain: false,
-    });
-
-    const [isEditing, setIsEditing] = useState(false);
-
-    // Scroll to section
-    const scrollToSection = (ref) => {
-        ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const toggleForm = () => {
+        setIsSignup(!isSignup);
     };
 
     useEffect(() => {
-        const storedUserDetails = JSON.parse(localStorage.getItem("userDetails"));
-        if (storedUserDetails) {
-            setUserDetails((prev) => ({
-                ...prev,
-                email: storedUserDetails.email,
-            }));
+        /* global google */
+        if (window.google) {
+            google.accounts.id.initialize({
+                client_id: CLIENT_ID,
+                callback: handleGoogleResponse,
+            });
+            google.accounts.id.renderButton(
+                document.getElementById("googleSignInDiv"),
+                { theme: "outline", size: "large", width: "100%" }
+            );
         }
     }, []);
 
-    const handleRiskFactorChange = (factor) => {
-        setRiskFactors((prev) => ({ ...prev, [factor]: !prev[factor] }));
+    const handleGoogleResponse = async (response) => {
+        // The JWT token from Google
+        const token = response.credential;
+
+        console.log("Google JWT Token:", token);
+
+        // Send token to your backend to verify & create/login user
+        const res = await fetch("http://localhost:5000/google-login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token }),
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+            localStorage.setItem("token", data.token);
+            localStorage.setItem("userDetails", JSON.stringify(data.user));
+            navigate("/home");
+        } else {
+            alert(data.message || "Google login failed");
+        }
     };
 
-    const handleSymptomChange = (symptom) => {
-        setSymptoms((prev) => ({ ...prev, [symptom]: !prev[symptom] }));
-    };
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        if (isSignup && password !== confirmPassword) {
+            alert("Passwords do not match");
+            return;
+        }
 
-    const getRiskLevel = () => {
-        const riskCount = Object.values(riskFactors).filter(Boolean).length;
-        if (riskCount >= 3) return { level: "High", color: "text-red-600" };
-        if (riskCount >= 1) return { level: "Moderate", color: "text-yellow-600" };
-        return { level: "Low", color: "text-green-600" };
+        const url = isSignup ? "http://localhost:5000/signup" : "http://localhost:5000/login";
+        const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            if (isSignup) {
+                alert("User registered successfully");
+                setIsSignup(false);
+            } else {
+                localStorage.setItem("token", data.token);
+                const userDetailsResponse = await fetch("http://localhost:5000/user/details", {
+                    method: "GET",
+                    headers: { "Authorization": `Bearer ${data.token}` },
+                });
+
+                const userDetailsData = await userDetailsResponse.json();
+                if (userDetailsResponse.ok) {
+                    localStorage.setItem("userDetails", JSON.stringify(userDetailsData));
+                    navigate("/home");
+                } else {
+                    alert("Failed to fetch user details");
+                }
+            }
+        } else {
+            alert(data.message);
+        }
     };
 
     return (
-        <div className="app-container">
-            {/* Left Sidebar */}
-            <div className="sidebar">
-                <div className="sidebar-content">
-                    <h1 className="sidebar-title">Detect Cancer</h1>
-                    <nav className="sidebar-nav">
-                        <div className="nav-item" onClick={() => navigate("/home")}>
-                            <Home size={24} />
-                            <span className="nav-text">Home</span>
-                        </div>
-                        <div className="nav-item" onClick={() => scrollToSection(profileRef)}>
-                            <UserCircle2 size={24} />
-                            <span className="nav-text">Profile</span>
-                        </div>
-                        <div className="nav-item" onClick={() => scrollToSection(historyRef)}>
-                            <History size={24} />
-                            <span className="nav-text">History</span>
-                        </div>
-                        <div className="nav-item" onClick={() => scrollToSection(symptomsRef)}>
-                            <AlertCircle size={24} />
-                            <span className="nav-text">Symptoms</span>
-                        </div>
-                        <div className="nav-item" onClick={() => navigate("/checkpage")}>
-                            <PlayCircle size={24} />
-                            <span className="nav-text">Start Detection</span>
-                        </div>
-                    </nav>
-                </div>
-                <div className="sidebar-footer">
-                    <button className="sign-out-button" onClick={() => navigate("/")}>
-                        <LogOut size={20} />
-                        <span className="sign-out-text">Sign Out</span>
-                    </button>
-                </div>
+        <div className="login-body">
+            <div className="left-body">
+                <video
+                    src="https://cdn.pixabay.com/video/2024/03/30/206173_tiny.mp4"
+                    autoPlay
+                    loop
+                    muted
+                    className="video-background"
+                    disablePictureInPicture
+                    playsInline
+                ></video>
             </div>
+            <div className="right-body">
+                <div className="login-container">
+                    <h2>{isSignup ? "Sign Up" : "Login"}</h2>
+                    <form onSubmit={handleSubmit}>
+                        <div className="input-group">
+                            <label>Email:</label>
+                            <input
+                                type="email"
+                                placeholder="Enter your email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                            />
+                        </div>
 
-            {/* Main Content */}
-            <div className="main-content">
-                <div className="content-container">
-                    <section className="card" ref={profileRef}>
-                        <div className="card-header">
-                            <div>
-                                <h2 className="card-title">Personal Information</h2>
-                                <p className="card-subtitle">Manage your profile details</p>
+                        <div className="input-group">
+                            <label>Password:</label>
+                            <input
+                                type="password"
+                                placeholder="Enter your password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+                        </div>
+
+                        {isSignup && (
+                            <div className="input-group">
+                                <label>Confirm Password:</label>
+                                <input
+                                    type="password"
+                                    placeholder="Confirm your password"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                />
                             </div>
-                            <button
-                                onClick={() => setIsEditing(!isEditing)}
-                                className="edit-button"
-                            >
-                                {isEditing ? "Save Changes" : "Edit Profile"}
-                            </button>
-                        </div>
+                        )}
 
-                        <div className="grid-container">
-                            {Object.keys(userDetails).map((key) => (
-                                <div key={key}>
-                                    <label className="input-label">
-                                        {key.charAt(0).toUpperCase() + key.slice(1)}
-                                    </label>
-                                    <input
-                                        type={typeof userDetails[key] === "number" ? "number" : "text"}
-                                        value={userDetails[key] || ""}
-                                        disabled={!isEditing}
-                                        className="input-field"
-                                        onChange={(e) =>
-                                            setUserDetails((prev) => ({
-                                                ...prev,
-                                                [key]: e.target.value,
-                                            }))
-                                        }
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    </section>
+                        <button type="submit" className="login-button">
+                            {isSignup ? "Sign Up" : "Login"}
+                        </button>
 
-                    {/* Risk Factors Card */}
-                    <section className="card" id="risk">
-                        <div className="card-header">
-                            <HeartPulse className="icon-violet" size={24} />
-                            <h3 className="card-title">Risk Factors</h3>
-                        </div>
-                        <div className="grid-container">
-                            {Object.keys(riskFactors).map((factor) => (
-                                <label className="checkbox-label" key={factor}>
-                                    <input
-                                        type="checkbox"
-                                        checked={riskFactors[factor]}
-                                        onChange={() => handleRiskFactorChange(factor)}
-                                        className="checkbox"
-                                    />
-                                    <span className="checkbox-text">
-                                        {factor.replace(/([A-Z])/g, " $1").trim()}
-                                    </span>
-                                </label>
-                            ))}
-                        </div>
-                        <div className="risk-level-container">
-                            <p className="risk-level-text">
-                                Risk Level:{" "}
-                                <span className={`risk-level ${getRiskLevel().color}`}>
-                                    {getRiskLevel().level}
-                                </span>
+                        {/* Google Sign-In Button */}
+                        <div id="googleSignInDiv" style={{ width: "100%", marginTop: "10px" }}></div>
+
+                        <div className="signup-link">
+                            <p>
+                                {isSignup ? "Already have an account? " : "Don't have an account? "}
+                                <button type="button" onClick={toggleForm} className="toggle-button">
+                                    {isSignup ? "Login" : "Sign Up"}
+                                </button>
                             </p>
                         </div>
-                    </section>
-
-                    {/* Symptoms Tracking */}
-                    <section className="card" ref={symptomsRef}>
-                        <div className="card-header">
-                            <Activity className="icon-violet" size={24} />
-                            <h3 className="card-title">Current Symptoms</h3>
-                        </div>
-                        <div className="grid-container">
-                            {Object.keys(symptoms).map((symptom) => (
-                                <label className="checkbox-label" key={symptom}>
-                                    <input
-                                        type="checkbox"
-                                        checked={symptoms[symptom]}
-                                        onChange={() => handleSymptomChange(symptom)}
-                                        className="checkbox"
-                                    />
-                                    <span className="checkbox-text">
-                                        {symptom.replace(/([A-Z])/g, " $1").trim()}
-                                    </span>
-                                </label>
-                            ))}
-                        </div>
-                    </section>
-
-                    {/* Stats Grid */}
-                    <div className="stats-grid">
-                        <div className="stats-card">
-                            <h3 className="stats-title">Total Users</h3>
-                            <div className="stats-content">
-                                <p className="stats-value">0</p>
-                                <p className="stats-subtext">Registered Today</p>
-                            </div>
-                        </div>
-                        <div className="stats-card">
-                            <h3 className="stats-title">Detected Cases</h3>
-                            <div className="stats-content">
-                                <p className="stats-value">0</p>
-                                <p className="stats-subtext">Cancer Patients</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Status Card */}
-                    <section className="card" ref={historyRef}>
-                        <h3 className="card-title">Detection Status</h3>
-                        <div className="status-container">
-                            <p className="status-text">Not checked for Cancer yet!</p>
-                            <button className="status-button">Start Detection</button>
-                        </div>
-                    </section>
+                    </form>
                 </div>
             </div>
         </div>
     );
 }
 
-export default Profileicon;
+export default Loginandsignup;
