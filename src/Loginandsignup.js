@@ -9,7 +9,7 @@ function Loginandsignup() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const navigate = useNavigate();
 
-    const CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID_HERE"; // Replace with your client ID
+    const CLIENT_ID = "845936642558-l7ft9n34dm5mkjpdg9iq9hdjq4lk473s.apps.googleusercontent.com"; // Replace with your client ID
 
     const toggleForm = () => {
         setIsSignup(!isSignup);
