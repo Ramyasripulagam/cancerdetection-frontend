@@ -13,7 +13,7 @@ const Contact = () => {
           <h1>Contact us</h1>
           <p>
             Need to get in touch with us? Either fill out the form with your inquiry or
-            find the <a href="#">cancerdetection@gmail.com</a> you'd like to contact below.
+            find the <a href="/contact">cancerdetection@gmail.com</a> you'd like to contact below.
           </p>
         </div>
         <form className="contact-form">
