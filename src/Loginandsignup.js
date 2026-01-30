@@ -91,9 +91,10 @@ function Loginandsignup() {
         }
     };
 
+    
     return (
         <div className="login-body">
-            <div className="left-body">
+            <div className="left-body"> 
                 <video
                     src="https://cdn.pixabay.com/video/2024/03/30/206173_tiny.mp4"
                     autoPlay
