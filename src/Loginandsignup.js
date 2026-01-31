@@ -8,6 +8,7 @@ function Loginandsignup() {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const navigate = useNavigate();
+    const API_URL = process.env.REACT_APP_API_URL;
 
     const CLIENT_ID =
         "845936642558-l7ft9n34dm5mkjpdg9iq9hdjq4lk473s.apps.googleusercontent.com";
@@ -16,13 +17,12 @@ function Loginandsignup() {
         setIsSignup(!isSignup);
     };
 
-    // ✅ useCallback added here
     const handleGoogleResponse = useCallback(async (response) => {
         const token = response.credential;
 
         console.log("Google JWT Token:", token);
 
-        const res = await fetch("http://localhost:5000/google-login", {
+        const res = await fetch(`${API_URL}/google-login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ token }),
@@ -37,9 +37,8 @@ function Loginandsignup() {
         } else {
             alert(data.message || "Google login failed");
         }
-    }, [navigate]);
+    }, [navigate, API_URL]);
 
-    // ✅ useEffect dependency fixed
     useEffect(() => {
         /* global google */
         if (window.google) {
@@ -63,9 +62,7 @@ function Loginandsignup() {
             return;
         }
 
-        const url = isSignup
-            ? "http://localhost:5000/signup"
-            : "http://localhost:5000/login";
+        const url = `${API_URL}/${isSignup ? "signup" : "login"}`;
 
         const response = await fetch(url, {
             method: "POST",
@@ -82,15 +79,12 @@ function Loginandsignup() {
             } else {
                 localStorage.setItem("token", data.token);
 
-                const userDetailsResponse = await fetch(
-                    "http://localhost:5000/user/details",
-                    {
-                        method: "GET",
-                        headers: {
-                            Authorization: `Bearer ${data.token}`,
-                        },
-                    }
-                );
+                const userDetailsResponse = await fetch(`${API_URL}/user/details`, {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${data.token}`,
+                    },
+                });
 
                 const userDetailsData = await userDetailsResponse.json();
 
@@ -193,4 +187,3 @@ function Loginandsignup() {
 }
 
 export default Loginandsignup;
-3
