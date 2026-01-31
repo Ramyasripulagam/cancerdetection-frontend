@@ -40,19 +40,19 @@ function Loginandsignup() {
     }, [navigate, API_URL]);
 
     useEffect(() => {
-        /* global google */
-        if (window.google) {
-            window.google.accounts.id.initialize({
-                client_id: CLIENT_ID,
-                callback: handleGoogleResponse,
-            });
+    if (window.google) {
+        window.google.accounts.id.initialize({
+            client_id: CLIENT_ID,
+            callback: handleGoogleResponse,
+        });
 
-            window.google.accounts.id.renderButton(
-                document.getElementById("googleSignInDiv"),
-                { theme: "outline", size: "large", width: "100%" }
-            );
-        }
-    }, [handleGoogleResponse, CLIENT_ID]);
+        window.google.accounts.id.renderButton(
+            document.getElementById("googleSignInDiv"),
+            { theme: "outline", size: "large", width: "100%" }
+        );
+    }
+}, [handleGoogleResponse, CLIENT_ID]);
+
 
     const handleSubmit = async (event) => {
         event.preventDefault();
